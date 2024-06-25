@@ -8,8 +8,6 @@ function hover(L=2^5;Re=1000,U=1,amp=π/4,ϵ=0.5,thk=2ϵ+√2, period=200)
     end
     # Oscillating motion and rotation
     function map(x,t)
-        # α = amp*cos(t*U/L); R = SA[cos(α) sin(α); -sin(α) cos(α)]
-        #α = amp*cos(t*U/L)
         β = 2π * t / period  # 360 degrees rotation over the given period
         R = SA[cos(β) -sin(β); sin(β) cos(β)]
         R * (x - SA[3L, 3L])
