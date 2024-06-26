@@ -1,10 +1,11 @@
 using WaterLily
 using StaticArrays
-function spin(L=2^5; Re=1000, U=1, ϵ=0.5, thk=2ϵ+√2, period=200)
+function spin(L=2^5; Re=1000, U=1, period=200, mem=Array)
     # Line segment SDF
-    function sdf(x, t)
-        y = x .- SA[0, clamp(x[2], -L/2, L/2)]
-        √sum(abs2, y) - thk/2
+    function sdf(x)
+        center,r = SA[3L, 3L, 0], L/2
+        x, y, z = xyz - center
+        √sum(abs2, SA[x, y, 0]) - r
     end
     # Oscillating motion and rotation
     function map(x, t)
@@ -14,11 +15,14 @@ function spin(L=2^5; Re=1000, U=1, ϵ=0.5, thk=2ϵ+√2, period=200)
             sin(β) cos(β) 0;
             0 0 1
             ]
-        R * (x - SA[3L, 3L])
+        R * (x - SA[3L, 3L, L])
     end
-    Simulation((6L, 6L, L), (0, 0, 0), L; U, ν=U*L/Re, body=AutoBody(sdf, map), ϵ)
+    Simulation((8L, 6L, 16), (0, 0, 0), L; U, ν=U*L/Re, body=AutoBody(sdf, map), mem)
 end
 
-include("2D.jl")
+sim= spin();
 
-sim_gif!(spin(), duration=8, clims=(-10, 10), plotbody=true, remeasure=true)
+include("3D.jl")
+
+# sim_gif!(spin(), duration=8, clims=(-10, 10), plotbody=true, remeasure=true)
+makie_video!(sim, remeeasure = true, name = "3D_Spin.mp4", duration=6)

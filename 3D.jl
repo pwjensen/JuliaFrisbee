@@ -4,7 +4,7 @@ function makie_video!(makie_plot,sim,dat,obs_update!;remeasure=false,name="file.
     # Set up viz data and figure
     obs = obs_update!(dat,sim) |> Observable;
     f = makie_plot(obs)
-    
+
     # Run simulation and update figure data
     t₀ = round(sim_time(sim))
     t = range(t₀,t₀+duration;step)
