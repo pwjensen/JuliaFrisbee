@@ -1,22 +1,24 @@
 using WaterLily
 using StaticArrays
-function spin(p=5; Re=1000, mem=Array, U=1)
-    # Period, length, viscosity
-    n=2^p; period = 200; L = 2^5;  ν=U*L/Re
-    # Motion Function
-    α = 2π / period
-    @fastmath @inline A(t) = SA[cos(α) -sin(α) 0; sin(α) cos(α) 0; 0 0 1] * (ω - SA[3L, 3L, L])
+function jelly(p=5;Re=5e2,mem=Array,U=1)
+    # Define simulation size, geometry dimensions, & viscosity
+    n = 2^p; R = 2n/3; h = 4n-2R; ν = U*R/Re
 
-    # Issues with what variables are doing and how to convert only to rotating the jellyfish
-    sphere = AutoBody((x,t)->abs(√sum(abs2,x)-L)-1,
-            (x,t)->A(t).*x)
-    plane =  AutoBody((x,t)->x[3]-h,
-            (x,t)->A(t).*x)
-    body = sphere-plane
+    # Motion functions
+    ω = 2U/R
+    @fastmath @inline A(t) = 1 .- SA[1,1,0]*0.1*cos(ω*t)
+    @fastmath @inline B(t) = SA[0,0,1]*((cos(ω*t)-1)*R/4-h)
+    @fastmath @inline C(t) = SA[0,0,1]*sin(ω*t)*R/4
 
-    Simulation((8L, 6L, 16), (0, 0, 0), L; U, ν, body, mem)
+    # Build jelly from a mapped sphere and plane
+    sphere = AutoBody((x,t)->abs(√sum(abs2,x)-R)-1, # sdf
+                        (x,t)->A(t).*x+B(t)+C(t))     # map
+    plane = AutoBody((x,t)->x[3]-h,(x,t)->x+C(t))
+    body =  sphere-plane
+
+    # Return initialized simulation
+    Simulation((n,n,4n),(0,0,-U),R; ν,body,mem,T=Float32)
 end
-
 
 using Meshing, GeometryBasics
 function geom!(md,d,sim,t=WaterLily.time(sim))
@@ -47,7 +49,7 @@ Makie.inline!(false)
 #CUDA.allowscalar(false)
 begin
     # Define geometry and motion on GPU
-    sim = spin();
+    sim = jelly(mem=Array);
     sim_step!(sim,sim_time(sim)+0.05);
 
     # Create CPU buffer arrays for geometry flow viz
@@ -66,7 +68,7 @@ begin
 end
 
 # Loop in time
-record(fig,"rod.mp4",1:100) do frame
+record(fig,"jelly.mp4",1:100) do frame
 #foreach(1:10) do frame
     @show frame
     sim_step!(sim,sim_time(sim)+0.05);
