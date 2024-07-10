@@ -1,11 +1,15 @@
 using WaterLily
 using StaticArrays
+using ParametricBodies
+
 function spin(p=5; Re=1000, mem=Array, U=1)
     # Period, length, viscosity
     n=2^p; period = 200; L = 2^5;  ν=U*L/Re
     # Motion Function
     α = 2π / period
-    @fastmath @inline A(t) = SA[cos(α) -sin(α) 0; sin(α) cos(α) 0; 0 0 1] * (ω - SA[3L, 3L, L])
+
+    # Lots of fixes needed
+    A(t) = SA[cos(α) -sin(α) 0; sin(α) cos(α) 0; 0 0 1] * (ω - SA[3L, 3L, L])
 
     # Issues with what variables are doing and how to convert only to rotating the jellyfish
     sphere = AutoBody((x,t)->abs(√sum(abs2,x)-L)-1,
