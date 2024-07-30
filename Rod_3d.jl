@@ -1,6 +1,5 @@
 using WaterLily
 using StaticArrays
-using ParametricBodies
 
 function spin(p=5; Re=1000, mem=Array, U=1)
     # Period, length, viscosity
